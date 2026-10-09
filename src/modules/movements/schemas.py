@@ -1,0 +1,27 @@
+from datetime import datetime
+from enum import Enum
+from typing import Optional
+from pydantic import BaseModel, ConfigDict, Field
+
+
+class MovementType(str, Enum):
+    ENTRADA = "entrada"
+    SAIDA = "saida"
+
+
+class StockMovementCreate(BaseModel):
+    produto_id: int
+    tipo: MovementType
+    quantidade: int = Field(..., gt=0)
+    observacao: Optional[str] = Field(None, max_length=255)
+
+
+class StockMovementResponse(BaseModel):
+    id: int
+    produto_id: int
+    tipo: str
+    quantidade: int
+    data: datetime
+    observacao: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
