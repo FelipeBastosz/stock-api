@@ -5,6 +5,9 @@ from fastapi import FastAPI, Request
 from src.core.config import settings
 from src.core.handlers import global_exception_handler, register_exception_handlers
 from src.core.logging import logger, setup_logging
+from src.modules.categories.routes import router as categories_router
+from src.modules.products.routes import router as products_router
+from src.modules.suppliers.routes import router as suppliers_router
 
 
 @asynccontextmanager
@@ -32,6 +35,10 @@ app = FastAPI(
 )
 
 register_exception_handlers(app)
+
+app.include_router(categories_router)
+app.include_router(suppliers_router)
+app.include_router(products_router)
 
 
 @app.middleware("http")

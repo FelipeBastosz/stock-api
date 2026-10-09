@@ -3,6 +3,9 @@ from decimal import Decimal
 from typing import Optional
 from pydantic import BaseModel, ConfigDict, Field
 
+from src.modules.categories.schemas import CategoryResponse
+from src.modules.suppliers.schemas import SupplierResponse
+
 
 class ProductBase(BaseModel):
     nome: str = Field(..., min_length=2, max_length=150)
@@ -35,3 +38,9 @@ class ProductResponse(ProductBase):
     data_cadastro: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class ProductDetailResponse(ProductResponse):
+    category: Optional[CategoryResponse] = None
+    supplier: Optional[SupplierResponse] = None
+
