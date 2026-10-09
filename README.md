@@ -1,4 +1,4 @@
-# Stock Management API — 愚公移山 Variedades
+# Stock Management API — Variedades
 
 API RESTful para controle de estoque, catálogo de produtos, fornecedores e auditoria de movimentações.
 
