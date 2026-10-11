@@ -1,5 +1,5 @@
-from typing import List
-from sqlalchemy import func, select
+from typing import List, Optional
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -41,16 +41,54 @@ async def create_product(db: AsyncSession, data: ProductCreate) -> Product:
     return await get_product_by_id(db, product.id)
 
 
-async def list_products(db: AsyncSession, skip: int = 0, limit: int = 50) -> List[Product]:
+async def list_products(
+    db: AsyncSession,
+    skip: int = 0,
+    limit: int = 50,
+    busca: Optional[str] = None,
+    categoria_id: Optional[int] = None,
+    fornecedor_id: Optional[int] = None,
+    abaixo_minimo: Optional[bool] = None,
+) -> List[Product]:
     stmt = (
         select(Product)
         .options(selectinload(Product.category), selectinload(Product.supplier))
+    )
+
+    if busca:
+        termo = f"%{busca.strip()}%"
+        stmt = stmt.where(or_(Product.nome.ilike(termo), Product.sku.ilike(termo)))
+
+    if categoria_id is not None:
+        stmt = stmt.where(Product.categoria_id == categoria_id)
+
+    if fornecedor_id is not None:
+        stmt = stmt.where(Product.fornecedor_id == fornecedor_id)
+
+    if abaixo_minimo is True:
+        stmt = stmt.where(Product.quantidade_em_estoque <= Product.estoque_minimo)
+
+    stmt = stmt.offset(skip).limit(limit).order_by(Product.id.asc())
+    result = await db.execute(stmt)
+    return list(result.scalars().all())
+
+
+async def list_low_stock_products(
+    db: AsyncSession,
+    skip: int = 0,
+    limit: int = 50,
+) -> List[Product]:
+    stmt = (
+        select(Product)
+        .options(selectinload(Product.category), selectinload(Product.supplier))
+        .where(Product.quantidade_em_estoque <= Product.estoque_minimo)
+        .order_by((Product.quantidade_em_estoque - Product.estoque_minimo).asc())
         .offset(skip)
         .limit(limit)
-        .order_by(Product.id.asc())
     )
     result = await db.execute(stmt)
     return list(result.scalars().all())
+
 
 
 async def get_product_by_id(db: AsyncSession, product_id: int) -> Product:

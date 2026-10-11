@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -31,13 +31,41 @@ async def create_product(
     response_model=List[ProductDetailResponse],
     status_code=status.HTTP_200_OK,
     summary="Listar produtos",
+    description="Lista produtos cadastrados com suporte a busca textual e filtros estratégicos.",
 )
 async def list_products(
     skip: int = Query(0, ge=0, description="Número de registros para pular"),
     limit: int = Query(50, ge=1, le=100, description="Quantidade máxima de registros retornados"),
+    busca: Optional[str] = Query(None, description="Busca textual por nome ou SKU"),
+    categoria_id: Optional[int] = Query(None, description="Filtrar por categoria"),
+    fornecedor_id: Optional[int] = Query(None, description="Filtrar por fornecedor"),
+    abaixo_minimo: Optional[bool] = Query(None, description="Filtrar apenas produtos com estoque no mínimo ou abaixo"),
     db: AsyncSession = Depends(get_db),
 ):
-    return await service.list_products(db, skip=skip, limit=limit)
+    return await service.list_products(
+        db,
+        skip=skip,
+        limit=limit,
+        busca=busca,
+        categoria_id=categoria_id,
+        fornecedor_id=fornecedor_id,
+        abaixo_minimo=abaixo_minimo,
+    )
+
+
+@router.get(
+    "/low-stock",
+    response_model=List[ProductDetailResponse],
+    status_code=status.HTTP_200_OK,
+    summary="Relatório de estoque crítico / mínimo",
+    description="Retorna produtos que atingiram ou estão abaixo do estoque mínimo, ordenados pela criticidade do déficit.",
+)
+async def get_low_stock_products(
+    skip: int = Query(0, ge=0, description="Número de registros para pular"),
+    limit: int = Query(50, ge=1, le=100, description="Quantidade máxima de registros retornados"),
+    db: AsyncSession = Depends(get_db),
+):
+    return await service.list_low_stock_products(db, skip=skip, limit=limit)
 
 
 @router.get(
@@ -51,6 +79,7 @@ async def get_product(
     db: AsyncSession = Depends(get_db),
 ):
     return await service.get_product_by_id(db, product_id)
+
 
 
 @router.put(
