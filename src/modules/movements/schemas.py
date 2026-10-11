@@ -2,7 +2,6 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional
 from pydantic import BaseModel, ConfigDict, Field
-
 from src.modules.products.schemas import ProductResponse
 
 
@@ -31,4 +30,11 @@ class StockMovementResponse(BaseModel):
 
 class StockMovementDetailResponse(StockMovementResponse):
     product: Optional[ProductResponse] = None
+
+
+class MovementSummaryResponse(BaseModel):
+    total_movimentacoes: int
+    total_itens_entrada: int
+    total_itens_saida: int
+    saldo_periodo: int
 
