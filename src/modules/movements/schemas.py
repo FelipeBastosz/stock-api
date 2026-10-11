@@ -3,6 +3,8 @@ from enum import Enum
 from typing import Optional
 from pydantic import BaseModel, ConfigDict, Field
 
+from src.modules.products.schemas import ProductResponse
+
 
 class MovementType(str, Enum):
     ENTRADA = "entrada"
@@ -25,3 +27,8 @@ class StockMovementResponse(BaseModel):
     observacao: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class StockMovementDetailResponse(StockMovementResponse):
+    product: Optional[ProductResponse] = None
+
