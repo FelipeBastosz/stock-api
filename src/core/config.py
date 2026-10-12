@@ -11,6 +11,10 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql+asyncpg://admin:admin_password@localhost:5432/estoque_db"
     DATABASE_ECHO: bool = False
 
+    JWT_SECRET_KEY: str = "secret-token-key-for-stock-api-development-use"
+    JWT_ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

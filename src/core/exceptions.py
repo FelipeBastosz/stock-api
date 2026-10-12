@@ -61,3 +61,18 @@ class InsufficientStockException(BusinessRuleException):
                 "requested_quantity": requested_quantity,
             },
         )
+
+
+class UnauthorizedException(AppException):
+    """Falha de autenticação ou token ausente/expirado (401)."""
+
+    def __init__(self, message: str = "Credenciais inválidas ou token ausente/expirado.") -> None:
+        super().__init__(message=message, status_code=401)
+
+
+class ForbiddenException(AppException):
+    """Acesso negado por permissões de perfil insuficientes (403)."""
+
+    def __init__(self, message: str = "Acesso negado: permissões insuficientes.") -> None:
+        super().__init__(message=message, status_code=403)
+

@@ -5,6 +5,7 @@ from fastapi import FastAPI, Request
 from src.core.config import settings
 from src.core.handlers import global_exception_handler, register_exception_handlers
 from src.core.logging import logger, setup_logging
+from src.modules.auth.routes import router as auth_router
 from src.modules.categories.routes import router as categories_router
 from src.modules.movements.routes import router as movements_router
 from src.modules.products.routes import router as products_router
@@ -28,6 +29,7 @@ app = FastAPI(
     redoc_url="/redoc",
     openapi_tags=[
         {"name": "Sistema", "description": "Status e integridade da API"},
+        {"name": "Autenticação", "description": "Registro, login e emissão de tokens JWT"},
         {"name": "Categorias", "description": "Gerenciamento de categorias"},
         {"name": "Fornecedores", "description": "Gerenciamento de fornecedores"},
         {"name": "Produtos", "description": "Catálogo de produtos e controle de estoque"},
@@ -37,10 +39,12 @@ app = FastAPI(
 
 register_exception_handlers(app)
 
+app.include_router(auth_router)
 app.include_router(categories_router)
 app.include_router(suppliers_router)
 app.include_router(products_router)
 app.include_router(movements_router)
+
 
 
 
