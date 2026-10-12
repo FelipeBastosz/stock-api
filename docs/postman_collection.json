@@ -1,0 +1,331 @@
+{
+  "info": {
+    "name": "Stock Management API",
+    "_postman_id": "a981c2f1-47c8-4a12-8e6f-stock-api",
+    "description": "Collection completa para homologação e auditoria da Stock Management API.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Sistema",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Autenticação",
+      "item": [
+        {
+          "name": "Registrar Administrador",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"email\": \"admin@empresa.com\",\n  \"password\": \"admin_secret_123\",\n  \"role\": \"admin\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] }
+          }
+        },
+        {
+          "name": "Registrar Operador",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"operador\",\n  \"email\": \"operador@empresa.com\",\n  \"password\": \"op_secret_123\",\n  \"role\": \"operator\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] }
+          }
+        },
+        {
+          "name": "Login (JSON)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.access_token) {",
+                  "    pm.collectionVariables.set('token', jsonData.access_token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin_secret_123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/token", "host": ["{{baseUrl}}"], "path": ["auth", "token"] }
+          }
+        },
+        {
+          "name": "Perfil Atual (Me)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/auth/me", "host": ["{{baseUrl}}"], "path": ["auth", "me"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Categorias",
+      "item": [
+        {
+          "name": "Criar Categoria",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Eletrônicos\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/categories", "host": ["{{baseUrl}}"], "path": ["categories"] }
+          }
+        },
+        {
+          "name": "Listar Categorias",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/categories?skip=0&limit=50", "host": ["{{baseUrl}}"], "path": ["categories"], "query": [{ "key": "skip", "value": "0" }, { "key": "limit", "value": "50" }] }
+          }
+        },
+        {
+          "name": "Buscar Categoria por ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/categories/1", "host": ["{{baseUrl}}"], "path": ["categories", "1"] }
+          }
+        },
+        {
+          "name": "Atualizar Categoria",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Eletrônicos e Acessórios\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/categories/1", "host": ["{{baseUrl}}"], "path": ["categories", "1"] }
+          }
+        },
+        {
+          "name": "Excluir Categoria",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/categories/1", "host": ["{{baseUrl}}"], "path": ["categories", "1"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Fornecedores",
+      "item": [
+        {
+          "name": "Criar Fornecedor",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Distribuidora Global Ltda\",\n  \"cnpj\": \"12345678000199\",\n  \"telefone\": \"7532219988\",\n  \"email\": \"contato@distribuidoraglobal.com\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/suppliers", "host": ["{{baseUrl}}"], "path": ["suppliers"] }
+          }
+        },
+        {
+          "name": "Listar Fornecedores",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/suppliers?skip=0&limit=50", "host": ["{{baseUrl}}"], "path": ["suppliers"], "query": [{ "key": "skip", "value": "0" }, { "key": "limit", "value": "50" }] }
+          }
+        },
+        {
+          "name": "Buscar Fornecedor por ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/suppliers/1", "host": ["{{baseUrl}}"], "path": ["suppliers", "1"] }
+          }
+        },
+        {
+          "name": "Atualizar Fornecedor",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Distribuidora Global do Brasil\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/suppliers/1", "host": ["{{baseUrl}}"], "path": ["suppliers", "1"] }
+          }
+        },
+        {
+          "name": "Excluir Fornecedor",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/suppliers/1", "host": ["{{baseUrl}}"], "path": ["suppliers", "1"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Produtos",
+      "item": [
+        {
+          "name": "Criar Produto",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Teclado Mecânico RGB\",\n  \"sku\": \"TEC-MEC-01\",\n  \"preco_custo\": 120.00,\n  \"preco_venda\": 249.90,\n  \"quantidade_em_estoque\": 15,\n  \"estoque_minimo\": 5,\n  \"categoria_id\": 1,\n  \"fornecedor_id\": 1\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/products", "host": ["{{baseUrl}}"], "path": ["products"] }
+          }
+        },
+        {
+          "name": "Listar Produtos",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/products?skip=0&limit=50", "host": ["{{baseUrl}}"], "path": ["products"], "query": [{ "key": "skip", "value": "0" }, { "key": "limit", "value": "50" }] }
+          }
+        },
+        {
+          "name": "Buscar Produtos (Filtro Textual)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/products?busca=teclado", "host": ["{{baseUrl}}"], "path": ["products"], "query": [{ "key": "busca", "value": "teclado" }] }
+          }
+        },
+        {
+          "name": "Relatório de Estoque Crítico (Low Stock)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/products/low-stock", "host": ["{{baseUrl}}"], "path": ["products", "low-stock"] }
+          }
+        },
+        {
+          "name": "Buscar Produto por ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/products/1", "host": ["{{baseUrl}}"], "path": ["products", "1"] }
+          }
+        },
+        {
+          "name": "Atualizar Produto",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"preco_venda\": 269.90\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/products/1", "host": ["{{baseUrl}}"], "path": ["products", "1"] }
+          }
+        },
+        {
+          "name": "Excluir Produto",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/products/1", "host": ["{{baseUrl}}"], "path": ["products", "1"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Movimentações de Estoque",
+      "item": [
+        {
+          "name": "Registrar Entrada",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"produto_id\": 1,\n  \"tipo\": \"entrada\",\n  \"quantidade\": 10,\n  \"observacao\": \"Reposição de lote NF 1024\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/movements", "host": ["{{baseUrl}}"], "path": ["movements"] }
+          }
+        },
+        {
+          "name": "Registrar Saída",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"produto_id\": 1,\n  \"tipo\": \"saida\",\n  \"quantidade\": 3,\n  \"observacao\": \"Venda balcão pedido #501\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/movements", "host": ["{{baseUrl}}"], "path": ["movements"] }
+          }
+        },
+        {
+          "name": "Listar Histórico de Movimentações",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/movements?skip=0&limit=50", "host": ["{{baseUrl}}"], "path": ["movements"], "query": [{ "key": "skip", "value": "0" }, { "key": "limit", "value": "50" }] }
+          }
+        },
+        {
+          "name": "Filtrar por Período e Fornecedor",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/movements?fornecedor_id=1&data_inicio=2026-10-01T00:00:00&data_fim=2026-10-31T23:59:59",
+              "host": ["{{baseUrl}}"],
+              "path": ["movements"],
+              "query": [
+                { "key": "fornecedor_id", "value": "1" },
+                { "key": "data_inicio", "value": "2026-10-01T00:00:00" },
+                { "key": "data_fim", "value": "2026-10-31T23:59:59" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Resumo Consolidado de Movimentações",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/movements/summary?produto_id=1", "host": ["{{baseUrl}}"], "path": ["movements", "summary"], "query": [{ "key": "produto_id", "value": "1" }] }
+          }
+        },
+        {
+          "name": "Buscar Movimentação por ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/movements/1", "host": ["{{baseUrl}}"], "path": ["movements", "1"] }
+          }
+        }
+      ]
+    }
+  ]
+}
