@@ -138,7 +138,7 @@ A integridade do código também é validada automaticamente a cada push ou pull
 
 ---
 
-## 📑 Resumo dos Endpoints
+## 📑 Resumo dos Endpoints e Permissões (RBAC)
 
 | Método | Endpoint | Descrição | Permissão |
 | :--- | :--- | :--- | :--- |
@@ -147,26 +147,28 @@ A integridade do código também é validada automaticamente a cada push ou pull
 | `POST` | `/auth/login` | Login com formulário OAuth2 (Swagger) | Público |
 | `POST` | `/auth/token` | Login via JSON retornando JWT | Público |
 | `GET` | `/auth/me` | Dados do usuário autenticado | Autenticado |
-| `POST` | `/categories` | Criar nova categoria (nome único) | Autenticado |
+| `POST` | `/categories` | Criar nova categoria (nome único) | **Admin** |
 | `GET` | `/categories` | Listar categorias com paginação | Público |
 | `GET` | `/categories/{id}` | Obter detalhes da categoria | Público |
-| `PUT` | `/categories/{id}` | Atualizar categoria | Autenticado |
-| `DELETE` | `/categories/{id}` | Excluir categoria (bloqueia se houver produtos) | Autenticado |
-| `POST` | `/suppliers` | Criar fornecedor (CNPJ e Email únicos) | Autenticado |
+| `PUT` | `/categories/{id}` | Atualizar categoria | **Admin** |
+| `DELETE` | `/categories/{id}` | Excluir categoria (bloqueia se houver produtos) | **Admin** |
+| `POST` | `/suppliers` | Criar fornecedor (CNPJ e Email únicos) | **Admin** |
 | `GET` | `/suppliers` | Listar fornecedores com paginação | Público |
 | `GET` | `/suppliers/{id}` | Obter detalhes do fornecedor | Público |
-| `PUT` | `/suppliers/{id}` | Atualizar fornecedor | Autenticado |
-| `DELETE` | `/suppliers/{id}` | Excluir fornecedor (bloqueia se houver produtos) | Autenticado |
-| `POST` | `/products` | Cadastrar produto no catálogo | Autenticado |
+| `PUT` | `/suppliers/{id}` | Atualizar fornecedor | **Admin** |
+| `DELETE` | `/suppliers/{id}` | Excluir fornecedor (bloqueia se houver produtos) | **Admin** |
+| `POST` | `/products` | Cadastrar produto no catálogo | **Admin** |
 | `GET` | `/products` | Listar produtos com filtros (`busca`, `categoria_id`, etc.) | Público |
 | `GET` | `/products/low-stock` | **Relatório estratégico de estoque crítico** | Público |
 | `GET` | `/products/{id}` | Detalhes do produto com categoria e fornecedor | Público |
-| `PUT` | `/products/{id}` | Atualizar produto | Autenticado |
-| `DELETE` | `/products/{id}` | Excluir produto (bloqueia se houver movimentações) | Autenticado |
-| `POST` | `/movements` | **Registrar entrada ou saída com lock pessimista** | Autenticado |
-| `GET` | `/movements` | Histórico com filtros (`data_inicio`, `fornecedor_id`, etc.) | Autenticado |
-| `GET` | `/movements/summary` | **Relatório analítico consolidado do período** | Autenticado |
-| `GET` | `/movements/{id}` | Detalhes de uma movimentação por ID | Autenticado |
+| `PUT` | `/products/{id}` | Atualizar produto | **Admin** |
+| `DELETE` | `/products/{id}` | Excluir produto (bloqueia se houver movimentações) | **Admin** |
+| `POST` | `/movements` | **Registrar entrada ou saída com lock pessimista** | **Admin / Operador** |
+| `GET` | `/movements` | Histórico com filtros (`data_inicio`, `fornecedor_id`, etc.) | **Admin / Operador** |
+| `GET` | `/movements/summary` | **Relatório analítico consolidado do período** | **Admin / Operador** |
+| `GET` | `/movements/{id}` | Detalhes de uma movimentação por ID | **Admin / Operador** |
+
+> **Nota de Integração**: A API possui suporte a **CORS (Cross-Origin Resource Sharing)** pré-configurado, permitindo integração direta com aplicações web (React, Vue, Vite) e mobile sem bloqueios de origem cruzada.
 
 ---
 

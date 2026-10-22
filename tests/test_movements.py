@@ -167,6 +167,13 @@ async def test_movements_advanced_filters_and_date_validation(auth_client: Async
     assert bad_range.status_code == 400
     assert "não pode ser posterior" in bad_range.json()["message"]
 
+    # 4. Compatibilidade e resiliência entre datas com e sem fuso horário (aware e naive)
+    safe_tz_resp = await auth_client.get(
+        "/movements",
+        params={"data_inicio": "2026-10-20T10:00:00Z", "data_fim": "2026-10-25T10:00:00"},
+    )
+    assert safe_tz_resp.status_code == 200
+
 
 @pytest.mark.asyncio
 async def test_concurrent_movements_race_condition(auth_client: AsyncClient):

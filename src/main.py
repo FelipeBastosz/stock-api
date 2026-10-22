@@ -2,6 +2,8 @@ import time
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 
+from fastapi.middleware.cors import CORSMiddleware
+
 from src.core.config import settings
 from src.core.handlers import global_exception_handler, register_exception_handlers
 from src.core.logging import logger, setup_logging
@@ -35,6 +37,14 @@ app = FastAPI(
         {"name": "Produtos", "description": "Catálogo de produtos e controle de estoque"},
         {"name": "Movimentações", "description": "Histórico e auditoria de movimentações"},
     ],
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 register_exception_handlers(app)

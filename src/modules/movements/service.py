@@ -1,8 +1,16 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+
+
+def _normalize_datetime(dt: Optional[datetime]) -> Optional[datetime]:
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
 
 from src.core.exceptions import (
     BusinessRuleException,
@@ -66,7 +74,7 @@ async def list_movements(
     data_inicio: Optional[datetime] = None,
     data_fim: Optional[datetime] = None,
 ) -> List[StockMovement]:
-    if data_inicio and data_fim and data_inicio > data_fim:
+    if data_inicio and data_fim and _normalize_datetime(data_inicio) > _normalize_datetime(data_fim):
         raise BusinessRuleException("A data de início não pode ser posterior à data de término.")
 
     stmt = (
@@ -102,7 +110,7 @@ async def get_movements_summary(
     data_inicio: Optional[datetime] = None,
     data_fim: Optional[datetime] = None,
 ) -> MovementSummaryResponse:
-    if data_inicio and data_fim and data_inicio > data_fim:
+    if data_inicio and data_fim and _normalize_datetime(data_inicio) > _normalize_datetime(data_fim):
         raise BusinessRuleException("A data de início não pode ser posterior à data de término.")
 
     def apply_filters(statement):
