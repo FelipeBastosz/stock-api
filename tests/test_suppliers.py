@@ -3,7 +3,7 @@ from httpx import AsyncClient
 
 
 @pytest.mark.asyncio
-async def test_supplier_lifecycle_and_uniqueness(client: AsyncClient):
+async def test_supplier_lifecycle_and_uniqueness(auth_client: AsyncClient):
     # 1. Cadastrar fornecedor
     payload = {
         "nome": "Tech Suprimentos Ltda",
@@ -11,7 +11,7 @@ async def test_supplier_lifecycle_and_uniqueness(client: AsyncClient):
         "telefone": "7532214455",
         "email": "vendas@techsuprimentos.com",
     }
-    resp = await client.post("/suppliers", json=payload)
+    resp = await auth_client.post("/suppliers", json=payload)
     assert resp.status_code == 201
     sup = resp.json()
     sup_id = sup["id"]
@@ -19,7 +19,7 @@ async def test_supplier_lifecycle_and_uniqueness(client: AsyncClient):
     assert sup["cnpj"] == payload["cnpj"]
 
     # 2. Rejeitar duplicidade de CNPJ
-    resp_dup_cnpj = await client.post(
+    resp_dup_cnpj = await auth_client.post(
         "/suppliers",
         json={
             "nome": "Outro Nome",
@@ -30,7 +30,7 @@ async def test_supplier_lifecycle_and_uniqueness(client: AsyncClient):
     assert resp_dup_cnpj.status_code == 409
 
     # 3. Rejeitar duplicidade de Email
-    resp_dup_email = await client.post(
+    resp_dup_email = await auth_client.post(
         "/suppliers",
         json={
             "nome": "Outro Fornecedor",
@@ -41,7 +41,7 @@ async def test_supplier_lifecycle_and_uniqueness(client: AsyncClient):
     assert resp_dup_email.status_code == 409
 
     # 4. Atualizar fornecedor
-    resp_up = await client.put(
+    resp_up = await auth_client.put(
         f"/suppliers/{sup_id}",
         json={"nome": "Tech Suprimentos Internacional"},
     )
@@ -49,16 +49,16 @@ async def test_supplier_lifecycle_and_uniqueness(client: AsyncClient):
     assert resp_up.json()["nome"] == "Tech Suprimentos Internacional"
 
     # 5. Excluir sem produtos vinculados
-    del_resp = await client.delete(f"/suppliers/{sup_id}")
+    del_resp = await auth_client.delete(f"/suppliers/{sup_id}")
     assert del_resp.status_code == 204
 
 
 @pytest.mark.asyncio
-async def test_cannot_delete_supplier_with_linked_products(client: AsyncClient):
-    cat_resp = await client.post("/categories", json={"nome": "Acessórios"})
+async def test_cannot_delete_supplier_with_linked_products(auth_client: AsyncClient):
+    cat_resp = await auth_client.post("/categories", json={"nome": "Acessórios"})
     cat_id = cat_resp.json()["id"]
 
-    sup_resp = await client.post(
+    sup_resp = await auth_client.post(
         "/suppliers",
         json={
             "nome": "Fornecedor Cabos",
@@ -69,7 +69,7 @@ async def test_cannot_delete_supplier_with_linked_products(client: AsyncClient):
     sup_id = sup_resp.json()["id"]
 
     # Cadastra produto vinculado
-    await client.post(
+    await auth_client.post(
         "/products",
         json={
             "nome": "Cabo HDMI 2.0",
@@ -84,6 +84,6 @@ async def test_cannot_delete_supplier_with_linked_products(client: AsyncClient):
     )
 
     # Bloqueio de exclusão por integridade referencial
-    del_resp = await client.delete(f"/suppliers/{sup_id}")
+    del_resp = await auth_client.delete(f"/suppliers/{sup_id}")
     assert del_resp.status_code == 400
     assert "Não é possível excluir" in del_resp.json()["message"]

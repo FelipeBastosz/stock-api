@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_db
+from src.modules.auth.dependencies import require_role
 from src.modules.movements import service
 from src.modules.movements.schemas import (
     MovementSummaryResponse,
@@ -12,7 +13,11 @@ from src.modules.movements.schemas import (
     StockMovementDetailResponse,
 )
 
-router = APIRouter(prefix="/movements", tags=["Movimentações"])
+router = APIRouter(
+    prefix="/movements",
+    tags=["Movimentações"],
+    dependencies=[Depends(require_role("admin", "operator"))],
+)
 
 
 @router.post(

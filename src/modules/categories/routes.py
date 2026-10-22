@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_db
+from src.modules.auth.dependencies import require_role
 from src.modules.categories import service
 from src.modules.categories.schemas import (
     CategoryCreate,
@@ -18,6 +19,7 @@ router = APIRouter(prefix="/categories", tags=["Categorias"])
     response_model=CategoryResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Cadastrar nova categoria",
+    dependencies=[Depends(require_role("admin"))],
 )
 async def create_category(
     payload: CategoryCreate,
@@ -58,6 +60,7 @@ async def get_category(
     response_model=CategoryResponse,
     status_code=status.HTTP_200_OK,
     summary="Atualizar categoria",
+    dependencies=[Depends(require_role("admin"))],
 )
 async def update_category(
     category_id: int,
@@ -71,6 +74,7 @@ async def update_category(
     "/{category_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Excluir categoria",
+    dependencies=[Depends(require_role("admin"))],
 )
 async def delete_category(
     category_id: int,

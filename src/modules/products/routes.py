@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_db
+from src.modules.auth.dependencies import require_role
 from src.modules.products import service
 from src.modules.products.schemas import (
     ProductCreate,
@@ -18,6 +19,7 @@ router = APIRouter(prefix="/products", tags=["Produtos"])
     response_model=ProductDetailResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Cadastrar novo produto",
+    dependencies=[Depends(require_role("admin"))],
 )
 async def create_product(
     payload: ProductCreate,
@@ -87,6 +89,7 @@ async def get_product(
     response_model=ProductDetailResponse,
     status_code=status.HTTP_200_OK,
     summary="Atualizar produto",
+    dependencies=[Depends(require_role("admin"))],
 )
 async def update_product(
     product_id: int,
@@ -100,6 +103,7 @@ async def update_product(
     "/{product_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Excluir produto",
+    dependencies=[Depends(require_role("admin"))],
 )
 async def delete_product(
     product_id: int,

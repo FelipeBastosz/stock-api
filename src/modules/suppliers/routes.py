@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_db
+from src.modules.auth.dependencies import require_role
 from src.modules.suppliers import service
 from src.modules.suppliers.schemas import (
     SupplierCreate,
@@ -18,6 +19,7 @@ router = APIRouter(prefix="/suppliers", tags=["Fornecedores"])
     response_model=SupplierResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Cadastrar novo fornecedor",
+    dependencies=[Depends(require_role("admin"))],
 )
 async def create_supplier(
     payload: SupplierCreate,
@@ -58,6 +60,7 @@ async def get_supplier(
     response_model=SupplierResponse,
     status_code=status.HTTP_200_OK,
     summary="Atualizar fornecedor",
+    dependencies=[Depends(require_role("admin"))],
 )
 async def update_supplier(
     supplier_id: int,
@@ -71,6 +74,7 @@ async def update_supplier(
     "/{supplier_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Excluir fornecedor",
+    dependencies=[Depends(require_role("admin"))],
 )
 async def delete_supplier(
     supplier_id: int,

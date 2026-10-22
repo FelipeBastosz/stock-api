@@ -3,10 +3,10 @@ from httpx import AsyncClient
 
 
 @pytest.mark.asyncio
-async def test_movements_immutability_and_balance_updates(client: AsyncClient):
-    cat = (await client.post("/categories", json={"nome": "Áudio"})).json()
+async def test_movements_immutability_and_balance_updates(auth_client: AsyncClient):
+    cat = (await auth_client.post("/categories", json={"nome": "Áudio"})).json()
     sup = (
-        await client.post(
+        await auth_client.post(
             "/suppliers",
             json={
                 "nome": "Fornecedor Fones",
@@ -18,7 +18,7 @@ async def test_movements_immutability_and_balance_updates(client: AsyncClient):
 
     # Produto com 10 unidades iniciais
     prod = (
-        await client.post(
+        await auth_client.post(
             "/products",
             json={
                 "nome": "Headset Bluetooth",
@@ -35,7 +35,7 @@ async def test_movements_immutability_and_balance_updates(client: AsyncClient):
     prod_id = prod["id"]
 
     # 1. Registrar movimentação de saída (venda de 4 unidades)
-    out_resp = await client.post(
+    out_resp = await auth_client.post(
         "/movements",
         json={
             "produto_id": prod_id,
@@ -48,11 +48,11 @@ async def test_movements_immutability_and_balance_updates(client: AsyncClient):
     assert out_resp.json()["quantidade"] == 4
 
     # Verificar que o saldo do produto caiu para 6
-    updated_prod = (await client.get(f"/products/{prod_id}")).json()
+    updated_prod = (await auth_client.get(f"/products/{prod_id}")).json()
     assert updated_prod["quantidade_em_estoque"] == 6
 
     # 2. Registrar movimentação de entrada (reposição de 10 unidades)
-    in_resp = await client.post(
+    in_resp = await auth_client.post(
         "/movements",
         json={
             "produto_id": prod_id,
@@ -64,11 +64,11 @@ async def test_movements_immutability_and_balance_updates(client: AsyncClient):
     assert in_resp.status_code == 201
 
     # Verificar que o saldo do produto subiu para 16
-    updated_prod = (await client.get(f"/products/{prod_id}")).json()
+    updated_prod = (await auth_client.get(f"/products/{prod_id}")).json()
     assert updated_prod["quantidade_em_estoque"] == 16
 
     # 3. Tentativa de saída maior do que o estoque disponível (deve falhar com 400)
-    insufficient_resp = await client.post(
+    insufficient_resp = await auth_client.post(
         "/movements",
         json={
             "produto_id": prod_id,
@@ -80,11 +80,11 @@ async def test_movements_immutability_and_balance_updates(client: AsyncClient):
     assert "Estoque insuficiente" in insufficient_resp.json()["message"]
 
     # O saldo permanece inalterado em 16
-    prod_check = (await client.get(f"/products/{prod_id}")).json()
+    prod_check = (await auth_client.get(f"/products/{prod_id}")).json()
     assert prod_check["quantidade_em_estoque"] == 16
 
     # 4. Consultar resumo de movimentações
-    summary_resp = await client.get(f"/movements/summary?produto_id={prod_id}")
+    summary_resp = await auth_client.get(f"/movements/summary?produto_id={prod_id}")
     assert summary_resp.status_code == 200
     summary = summary_resp.json()
     assert summary["total_movimentacoes"] == 2
@@ -93,6 +93,6 @@ async def test_movements_immutability_and_balance_updates(client: AsyncClient):
     assert summary["saldo_periodo"] == 6
 
     # 5. Tentativa de exclusão do produto com histórico de movimentações é bloqueada (400)
-    del_prod = await client.delete(f"/products/{prod_id}")
+    del_prod = await auth_client.delete(f"/products/{prod_id}")
     assert del_prod.status_code == 400
     assert "possui histórico" in del_prod.json()["message"]
