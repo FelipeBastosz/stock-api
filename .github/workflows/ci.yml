@@ -27,7 +27,8 @@ jobs:
 
     - name: Executar testes automatizados (pytest)
       env:
-        DATABASE_URL: sqlite+aiosqlite:///:memory:
-        JWT_SECRET_KEY: test-secret-key-for-ci-pipeline
+        PYTHONPATH: "."
+        DATABASE_URL: "sqlite+aiosqlite:///:memory:"
+        JWT_SECRET_KEY: "test-secret-key-for-ci-pipeline"
       run: |
         pytest -v --tb=short
