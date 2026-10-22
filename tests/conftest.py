@@ -97,9 +97,17 @@ async def operator_headers(operator_user: User) -> dict:
 
 
 @pytest_asyncio.fixture(scope="function")
-async def auth_client(client: AsyncClient, admin_headers: dict) -> AsyncClient:
-    client.headers.update(admin_headers)
-    return client
+async def auth_client(db_session: AsyncSession, admin_headers: dict) -> AsyncGenerator[AsyncClient, None]:
+    async def override_get_db() -> AsyncGenerator[AsyncSession, None]:
+        yield db_session
+
+    app.dependency_overrides[get_db] = override_get_db
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test", headers=admin_headers) as ac:
+        yield ac
+
+    app.dependency_overrides.clear()
 
 
 @pytest_asyncio.fixture(scope="function")

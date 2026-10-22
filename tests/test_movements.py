@@ -96,3 +96,134 @@ async def test_movements_immutability_and_balance_updates(auth_client: AsyncClie
     del_prod = await auth_client.delete(f"/products/{prod_id}")
     assert del_prod.status_code == 400
     assert "possui histórico" in del_prod.json()["message"]
+
+
+@pytest.mark.asyncio
+async def test_movements_advanced_filters_and_date_validation(auth_client: AsyncClient):
+    import asyncio
+    from datetime import datetime, timedelta, timezone
+
+    cat = (await auth_client.post("/categories", json={"nome": "Redes"})).json()
+    sup = (
+        await auth_client.post(
+            "/suppliers",
+            json={
+                "nome": "Fornecedor Roteadores",
+                "cnpj": "77889900000133",
+                "email": "redes@fornecedor.com",
+            },
+        )
+    ).json()
+
+    prod = (
+        await auth_client.post(
+            "/products",
+            json={
+                "nome": "Roteador Wi-Fi 6",
+                "sku": "ROT-WIFI6-01",
+                "preco_custo": 250.00,
+                "preco_venda": 420.00,
+                "quantidade_em_estoque": 20,
+                "estoque_minimo": 5,
+                "categoria_id": cat["id"],
+                "fornecedor_id": sup["id"],
+            },
+        )
+    ).json()
+
+    # Registrar entrada
+    await auth_client.post(
+        "/movements",
+        json={"produto_id": prod["id"], "tipo": "entrada", "quantidade": 15},
+    )
+
+    # 1. Filtragem por fornecedor
+    resp_sup = await auth_client.get(f"/movements?fornecedor_id={sup['id']}")
+    assert resp_sup.status_code == 200
+    movs = resp_sup.json()
+    assert len(movs) >= 1
+    assert all(m["product"]["fornecedor_id"] == sup["id"] for m in movs if m.get("product"))
+
+    # 2. Filtragem por período válido com params devidamente codificados
+    agora = datetime.now(timezone.utc)
+    inicio = (agora - timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    fim = (agora + timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    resp_period = await auth_client.get(
+        "/movements",
+        params={"data_inicio": inicio, "data_fim": fim},
+    )
+    assert resp_period.status_code == 200
+    assert len(resp_period.json()) >= 1
+
+    # 3. Validação de erro quando data_inicio > data_fim (deve retornar 400)
+    data_invalida_inicio = (agora + timedelta(days=5)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    data_invalida_fim = (agora - timedelta(days=5)).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    bad_range = await auth_client.get(
+        "/movements",
+        params={"data_inicio": data_invalida_inicio, "data_fim": data_invalida_fim},
+    )
+    assert bad_range.status_code == 400
+    assert "não pode ser posterior" in bad_range.json()["message"]
+
+
+@pytest.mark.asyncio
+async def test_concurrent_movements_race_condition(auth_client: AsyncClient):
+    cat = (await auth_client.post("/categories", json={"nome": "Concorrência"})).json()
+    sup = (
+        await auth_client.post(
+            "/suppliers",
+            json={
+                "nome": "Fornecedor Concorrência",
+                "cnpj": "33445566000177",
+                "email": "concorrencia@fornecedor.com",
+            },
+        )
+    ).json()
+
+    # Produto com estoque inicial de exatamente 5 unidades
+    prod = (
+        await auth_client.post(
+            "/products",
+            json={
+                "nome": "Placa de Vídeo RTX 4090",
+                "sku": "RTX-4090-LIMITED",
+                "preco_custo": 5000.00,
+                "preco_venda": 9500.00,
+                "quantidade_em_estoque": 5,
+                "estoque_minimo": 1,
+                "categoria_id": cat["id"],
+                "fornecedor_id": sup["id"],
+            },
+        )
+    ).json()
+    prod_id = prod["id"]
+
+    # Simular saídas consecutivas que esgotam o estoque disponível (5 unidades disponíveis)
+    # 1. Primeira saída de 2 unidades -> deve ter sucesso (restando 3)
+    resp1 = await auth_client.post(
+        "/movements",
+        json={"produto_id": prod_id, "tipo": "saida", "quantidade": 2},
+    )
+    assert resp1.status_code == 201
+
+    # 2. Segunda saída de 2 unidades -> deve ter sucesso (restando 1)
+    resp2 = await auth_client.post(
+        "/movements",
+        json={"produto_id": prod_id, "tipo": "saida", "quantidade": 2},
+    )
+    assert resp2.status_code == 201
+
+    # 3. Terceira tentativa de saída de 2 unidades -> DEVE FALHAR pois só resta 1 unidade
+    resp3 = await auth_client.post(
+        "/movements",
+        json={"produto_id": prod_id, "tipo": "saida", "quantidade": 2},
+    )
+    assert resp3.status_code == 400
+    assert "Estoque insuficiente" in resp3.json()["message"]
+
+    # O saldo final em estoque NUNCA pode ser negativo (deve restar exatamente 1 unidade)
+    final_prod = (await auth_client.get(f"/products/{prod_id}")).json()
+    assert final_prod["quantidade_em_estoque"] == 1
+

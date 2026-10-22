@@ -51,3 +51,31 @@ async def test_register_and_login_flow(client: AsyncClient):
     # 6. Acessar /auth/me sem token
     unauth_resp = await client.get("/auth/me")
     assert unauth_resp.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_rbac_permissions_isolation(
+    client: AsyncClient,
+    auth_client: AsyncClient,
+    operator_client: AsyncClient,
+):
+    # 1. Requisição anônima (sem token) a rota administrativa deve retornar 401
+    unauth_resp = await client.post("/categories", json={"nome": "Não Autorizado"})
+    assert unauth_resp.status_code == 401
+
+    # 2. Operador tentando criar categoria (ação exclusiva de admin) deve retornar 403
+    forbidden_create = await operator_client.post("/categories", json={"nome": "Tentativa Operador"})
+    assert forbidden_create.status_code == 403
+    assert "Acesso negado" in forbidden_create.json()["message"]
+
+    # 3. Operador tentando excluir categoria deve retornar 403
+    forbidden_delete = await operator_client.delete("/categories/1")
+    assert forbidden_delete.status_code == 403
+
+    # 4. Operador pode ler categorias (rota pública)
+    read_resp = await operator_client.get("/categories")
+    assert read_resp.status_code == 200
+
+    # 5. Administrador consegue criar categoria com sucesso (201)
+    admin_resp = await auth_client.post("/categories", json={"nome": "Categoria Admin"})
+    assert admin_resp.status_code == 201
