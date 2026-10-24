@@ -56,8 +56,6 @@ app.include_router(products_router)
 app.include_router(movements_router)
 
 
-
-
 @app.middleware("http")
 async def log_requests_middleware(request: Request, call_next):
     start_time = time.perf_counter()

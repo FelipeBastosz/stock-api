@@ -9,7 +9,6 @@ from src.core.security import create_access_token, hash_password
 from src.main import app
 from src.modules.auth.models import User
 
-# Import all models to ensure declarative metadata is complete
 import src.modules.auth.models  # noqa: F401
 import src.modules.categories.models  # noqa: F401
 import src.modules.movements.models  # noqa: F401

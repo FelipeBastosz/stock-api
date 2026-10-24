@@ -4,7 +4,6 @@ from httpx import AsyncClient
 
 @pytest.mark.asyncio
 async def test_supplier_lifecycle_and_uniqueness(auth_client: AsyncClient):
-    # 1. Cadastrar fornecedor
     payload = {
         "nome": "Tech Suprimentos Ltda",
         "cnpj": "12345678000199",
@@ -18,7 +17,6 @@ async def test_supplier_lifecycle_and_uniqueness(auth_client: AsyncClient):
     assert sup["nome"] == payload["nome"]
     assert sup["cnpj"] == payload["cnpj"]
 
-    # 2. Rejeitar duplicidade de CNPJ
     resp_dup_cnpj = await auth_client.post(
         "/suppliers",
         json={
@@ -29,7 +27,6 @@ async def test_supplier_lifecycle_and_uniqueness(auth_client: AsyncClient):
     )
     assert resp_dup_cnpj.status_code == 409
 
-    # 3. Rejeitar duplicidade de Email
     resp_dup_email = await auth_client.post(
         "/suppliers",
         json={
@@ -40,7 +37,6 @@ async def test_supplier_lifecycle_and_uniqueness(auth_client: AsyncClient):
     )
     assert resp_dup_email.status_code == 409
 
-    # 4. Atualizar fornecedor
     resp_up = await auth_client.put(
         f"/suppliers/{sup_id}",
         json={"nome": "Tech Suprimentos Internacional"},
@@ -48,7 +44,6 @@ async def test_supplier_lifecycle_and_uniqueness(auth_client: AsyncClient):
     assert resp_up.status_code == 200
     assert resp_up.json()["nome"] == "Tech Suprimentos Internacional"
 
-    # 5. Excluir sem produtos vinculados
     del_resp = await auth_client.delete(f"/suppliers/{sup_id}")
     assert del_resp.status_code == 204
 
@@ -68,7 +63,6 @@ async def test_cannot_delete_supplier_with_linked_products(auth_client: AsyncCli
     )
     sup_id = sup_resp.json()["id"]
 
-    # Cadastra produto vinculado
     await auth_client.post(
         "/products",
         json={
@@ -83,7 +77,6 @@ async def test_cannot_delete_supplier_with_linked_products(auth_client: AsyncCli
         },
     )
 
-    # Bloqueio de exclusão por integridade referencial
     del_resp = await auth_client.delete(f"/suppliers/{sup_id}")
     assert del_resp.status_code == 400
     assert "Não é possível excluir" in del_resp.json()["message"]

@@ -27,8 +27,6 @@ from src.modules.products.models import Product
 
 
 async def create_movement(db: AsyncSession, data: StockMovementCreate) -> StockMovement:
-    # Lock pessimista (SELECT ... FOR UPDATE) para garantir consistência
-    # do saldo e evitar race conditions em requisições concorrentes.
     stmt = (
         select(Product)
         .where(Product.id == data.produto_id)
