@@ -67,6 +67,8 @@ async def list_products(
 
     if abaixo_minimo is True:
         stmt = stmt.where(Product.quantidade_em_estoque <= Product.estoque_minimo)
+    elif abaixo_minimo is False:
+        stmt = stmt.where(Product.quantidade_em_estoque > Product.estoque_minimo)
 
     stmt = stmt.offset(skip).limit(limit).order_by(Product.id.asc())
     result = await db.execute(stmt)

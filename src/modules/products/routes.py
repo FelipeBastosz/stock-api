@@ -41,7 +41,10 @@ async def list_products(
     busca: Optional[str] = Query(None, description="Busca textual por nome ou SKU"),
     categoria_id: Optional[int] = Query(None, description="Filtrar por categoria"),
     fornecedor_id: Optional[int] = Query(None, description="Filtrar por fornecedor"),
-    abaixo_minimo: Optional[bool] = Query(None, description="Filtrar apenas produtos com estoque no mínimo ou abaixo"),
+    abaixo_minimo: Optional[bool] = Query(
+        None,
+        description="Filtrar por estoque: true (no mínimo ou abaixo) ou false (acima do mínimo)",
+    ),
     db: AsyncSession = Depends(get_db),
 ):
     return await service.list_products(

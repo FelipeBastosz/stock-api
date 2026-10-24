@@ -60,7 +60,16 @@ async def test_product_crud_and_advanced_filters(auth_client: AsyncClient):
     assert len(items) >= 1
     assert any(i["id"] == prod_id for i in items)
 
-    # 6. Atualizar produto
+    # 6. Filtros por nível de estoque (abaixo_minimo true e false)
+    resp_below = await auth_client.get("/products?abaixo_minimo=true")
+    assert resp_below.status_code == 200
+    assert any(p["id"] == prod_id for p in resp_below.json())
+
+    resp_above = await auth_client.get("/products?abaixo_minimo=false")
+    assert resp_above.status_code == 200
+    assert not any(p["id"] == prod_id for p in resp_above.json())
+
+    # 7. Atualizar produto
     up_resp = await auth_client.put(f"/products/{prod_id}", json={"preco_venda": 165.00})
     assert up_resp.status_code == 200
     assert float(up_resp.json()["preco_venda"]) == 165.00
